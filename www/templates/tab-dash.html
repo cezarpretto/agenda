@@ -1,0 +1,36 @@
+	<ion-view title="Agenda Telefônica Água Boa - MT">
+	<ion-content class="padding">
+	<form>
+	<div class="list list-inset">
+		<label class="item item-input">
+			<i class="icon ion-search placeholder-icon"></i>
+			<input type="text" placeholder="Digite o número ou o nome desejado..." ng-model="txtBusca">
+		</label>
+	</div>
+	<button class="button button-block button-positive" ng-click="buscar(txtBusca)">
+		<i class="icon ion-search placeholder-icon"></i> Buscar
+	</button>
+	</form>
+	<div class="list">
+		<a class="item item-icon-left item-button-right patrocinados" href="tel:663468-3248" ng-show="numeros.length > 0">
+			<i class="icon ion-social-usd"></i>
+			<h2><strong>Patrocinador</strong></h2>
+			<h2>Planos Assessoria</h2>
+			<strong><p>3468-3248</p></strong>
+			<button class="button button-dark">
+				<i class="icon ion-ios7-telephone"></i>
+			</button>
+		</a>
+	</div>	
+	<div class="list">
+		<a ng-repeat="n in numeros" class="item item-icon-left item-button-right" ng-click="opcao(n)">
+			<i class="icon ion-chatbubble-working"></i>
+			<h2>{{n.nome}}</h2>
+			<strong><p>{{n.numero}}</p></strong>
+			<button class="button button-positive">
+				<i class="icon ion-ios7-telephone"></i>
+			</button>
+		</a>
+	</div>
+</ion-content>
+</ion-view>

@@ -1,0 +1,11 @@
+{
+  "name": "agenda",
+  "private": "true",
+  "devDependencies": {
+    "ionic": "driftyco/ionic-bower#1.0.0-beta.12"
+  },
+  "dependencies": {
+    "angular-local-storage": "~0.0.7",
+    "ngStorage": "~0.1.8"
+  }
+}

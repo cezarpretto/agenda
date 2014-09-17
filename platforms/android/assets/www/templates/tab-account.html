@@ -1,0 +1,19 @@
+<ion-view title="Favoritos">
+  <ion-content class="padding">
+    <div class="list">
+		<a ng-repeat="n in listaFavoritos" class="item item-icon-left item-button-right" href="tel:66{{n.numero}}" ng-show="listaFavoritos.length > 0">
+			<i class="icon ion-chatbubble-working"></i>
+			<h2>{{n.nome}}</h2>
+			<strong><p>{{n.numero}}</p></strong>
+			<button class="button button-positive">
+				<i class="icon ion-ios7-telephone"></i>
+			</button>
+		</a>
+
+		<a class="item item-icon-left item-button-right" ng-show="listaFavoritos.length == 0">
+			<i class="icon ion-chatbubble-working"></i>
+			<h2>Você ainda não adicionou nada aos favoritos!</h2>
+		</a>
+	</div>
+  </ion-content>
+</ion-view>
