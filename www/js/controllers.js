@@ -1,55 +1,18 @@
 angular.module('starter.controllers', [])
 
-.controller('DashCtrl', function($scope, $http, $ionicPopup, $timeout, $ionicLoading, $ionicActionSheet, $q, $rootScope, $window, $location, $document) {
+.controller('DashCtrl', function($scope, $http, $ionicPopup, $timeout, $ionicLoading, $ionicActionSheet, $q, $rootScope, $window, $location, $document, $rootElement) {
 	$scope.numeros = [];
+	//$scope.buscar('planos');
+	$rootScope.listaFavoritos = [];
 	function init() {
-		$rootScope.listaFavoritos = [];
-		var deferred = $q.defer();
-		var setUp = "";
-		if(setUp) {
-			deferred.resolve(true);
-			return deferred.promise;
-		}
-		
-		var openRequest = window.indexedDB.open("agenda",1);
-	
-		openRequest.onerror = function(e) {
-			console.log("Error opening db");
-			console.dir(e);
-			deferred.reject(e.toString());
-		};
-
-		openRequest.onupgradeneeded = function(e) {
-	
-			var thisDb = e.target.result;
-			var objectStore;
-			
-			//Create Note OS
-			if(!thisDb.objectStoreNames.contains("cadNumeros")) {
-				objectStore = thisDb.createObjectStore("cadNumeros", { keyPath: "id", autoIncrement:true });
-				objectStore.createIndex("nome", "nome", { unique: false });
-				objectStore.createIndex("numero","numero", {unique:false});
-			}
-	
-		};
-
-		openRequest.onsuccess = function(e) {
-			db = e.target.result;
-			
-			db.onerror = function(event) {
-				// Generic error handler for all errors targeted at this database's
-				// requests!
-				deferred.reject("Database error: " + event.target.errorCode);
-			};
-	
-			setUp=true;
-			deferred.resolve(true);
-			$scope.getFavoritos();
-		};	
-
-		return deferred.promise;
-	}	
+		//$rootScope.listaFavoritos = [];
+		db = openDatabase('agendaDB', '1.0', 'Base de dados agenda', 2 * 1024 * 1024);
+		db.transaction(function(tx){
+			tx.executeSql('create table if not exists cad_numeros (id INTEGER PRIMARY KEY AUTOINCREMENT, nome, telefone)');
+		});
+	};	
 	init();
+	//$rootScope.getFavoritos();
 
 	$scope.buscar = function(busca){
 		if(busca != undefined){
@@ -123,47 +86,36 @@ angular.module('starter.controllers', [])
  };
 
  $scope.addFavorito = function(registro){
- 	//var db = db;
- 	var trans = db.transaction(["cadNumeros"], "readwrite");
- 	var store = trans.objectStore("cadNumeros");
-
- 	var request = store.put({
- 		"nome": registro.nome,
- 		"numero" : registro.numero
+ 	db.transaction(function(tx){
+ 		tx.executeSql('insert into cad_numeros (nome, telefone) values (?, ?)', [registro.nome, registro.numero]);
+ 		$scope.showAlert('Número adicionado =)');
  	});
-
- 	trans.oncomplete = function(e){
- 		$scope.showAlert("Número adicionado aos favoritos =)");
- 		$scope.listaFavoritos = [];
- 		$scope.getFavoritos();
- 	};
-
- 	trans.onerror = function(e) {
- 		console.log(e.value);
- 	};
-
+ 	$rootScope.getFavoritos();
  };
 
- $scope.getFavoritos = function(){
- 	$rootScope.listaFavoritos = [];
- 	var trans = db.transaction(["cadNumeros"], "readwrite");
-  	var store = trans.objectStore("cadNumeros");
-  	// Get everything in the store;
-  	var keyRange = IDBKeyRange.lowerBound(0);
-  	var cursorRequest = store.openCursor(keyRange);
+ $rootScope.getFavoritos = function(){
+ 	try{
+ 		db.transaction(function(tx){
+	 		tx.executeSql('select id, nome, telefone from cad_numeros', [], function(tx, results){
+	 			var len = results.rows.length, i;
+	 			var teste = []
+	 			$rootScope.listaFavoritos = [];
+	 			for(i = 0; i < len; i++){
+	 				teste.unshift(results.rows.item(i));
+	 			}
+	 			$rootScope.listaFavoritos = teste;
+	 		});
+	 	});
+ 	}catch(e){
+ 		console.log(e);
+ 	}
+  };
 
-  	cursorRequest.onsuccess = function(e) {
-  		var result = e.target.result;
-  		if(!!result == false)
-  			return;
-  		$rootScope.listaFavoritos.unshift(result.value);
-  		//console.log($rootScope.listaFavoritos);
-  		//console.log($rootScope.listaFavoritos);
-  		result.continue();
-  	};
-
-  	//cursorRequest.onerror = html5rocks.indexedDB.onerror;
-
+  $rootScope.deleteFavorito = function(registro){
+  	db.transaction(function(tx){
+ 		tx.executeSql('delete from cad_numeros where id = ?', [registro.id]);
+ 		$scope.showAlert('Número deletado =)');
+ 	});
   };
 
 })
@@ -176,9 +128,43 @@ angular.module('starter.controllers', [])
   $scope.friend = Friends.get($stateParams.friendId);
 })
 
-.controller('AccountCtrl', function($scope, $rootScope) {
+.controller('AccountCtrl', function($scope, $rootScope, $ionicActionSheet, $timeout) {
 	function init(){
-	//console.log($rootScope.listaFavoritos);
+		//db = openDatabase('agendaDB', '1.0', 'Base de dados agenda', 2 * 1024 * 1024);
+		//$rootScope.getFavoritos();
 	};
 	init();
+
+$scope.opcaoFavorito = function(registro) {
+
+   // Show the action sheet
+   var hideSheet = $ionicActionSheet.show({
+   	buttons: [
+   		{ text: 'Ligar' },
+   		{ text: 'Deletar' }
+   	],
+   	titleText: 'Opções',
+   	cancelText: 'Cancelar',
+   	cancel: function() {
+          
+      },
+      buttonClicked: function(index) {
+     	//console.log(index);
+     	if(index == 1){
+     		$rootScope.deleteFavorito(registro);
+     		$rootScope.getFavoritos();
+     	}else if(index == 0){
+     		window.location.href = 'tel:66'+registro.telefone;
+     		//$document.location.href = 'tel:'+registro.numero;
+     	}
+     }
+ });
+
+   // For example's sake, hide the sheet after two seconds
+   $timeout(function() {
+   	hideSheet();
+   }, 5000);
+
+};
+
 });
